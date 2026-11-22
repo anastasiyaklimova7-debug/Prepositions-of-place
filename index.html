@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Prepositions Game</title>
+<style>
+:root{
+  --brown:#6b3a1f; --orange:#e8893a; --green:#4f9a45; --red:#c8503a;
+  --sw:min(calc(100vw - 24px), calc((100vh - 305px) * 1.7914));
+  --tw:300px;
+  --th:clamp(56px, 9vh, 92px);
+}
+*{box-sizing:border-box}
+#layout{display:flex;flex-direction:column;align-items:center}
+#main{display:flex;flex-direction:column;align-items:center}
+
+html,body{margin:0;min-height:100%}
+body{
+  background:#f4e3cb;color:var(--brown);
+  font-family:"Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  display:flex;flex-direction:column;align-items:center;
+  user-select:none;-webkit-user-select:none;overflow-x:hidden;
+}
+#top{width:var(--sw);display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;flex-wrap:wrap}
+#top h1{margin:0;font-size:20px}
+.btnrow{display:flex;gap:6px;flex-wrap:wrap}
+button{
+  font:inherit;font-weight:700;color:var(--brown);background:#fff7ea;
+  border:2px solid #b9895a;border-radius:12px;padding:6px 12px;cursor:pointer;
+}
+button:hover{background:#ffe9c9}
+button.on{background:var(--orange);color:#fff;border-color:#c8702a}
+#instr{
+  width:var(--sw);display:flex;align-items:center;gap:10px;
+  background:#fff7ea;border:3px solid #b9895a;border-radius:16px;padding:8px 14px;
+  font-size:clamp(18px,3.2vh,30px);font-weight:700;min-height:56px;
+}
+#instr.shake{animation:shake .4s}
+@keyframes shake{0%,100%{transform:none}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+#sentence{flex:1}
+.prep{color:#fff;background:var(--orange);border-radius:8px;padding:0 8px}
+#msg{width:var(--sw);height:24px;font-weight:700;text-align:center;font-size:15px;line-height:24px}
+#msg.good{color:var(--green)} #msg.bad{color:var(--red)}
+#dots{display:flex;gap:6px}
+#dots span{width:12px;height:12px;border-radius:50%;background:#e2c9a6;border:2px solid #b9895a}
+#dots span.done{background:var(--green);border-color:#3b7a32}
+#dots span.cur{background:var(--orange);border-color:#c8702a}
+
+#scene{
+  position:relative;width:var(--sw);aspect-ratio:2576/1438;overflow:hidden;
+  background:#f3dcc0 url("images/background.jpg") center/100% 100% no-repeat;
+  border:3px solid #b9895a;border-radius:14px;
+}
+.fixed,.item{position:absolute}
+.art{width:100%;height:100%}
+.art img{width:100%;height:100%;object-fit:contain;display:block;pointer-events:none}
+.art.missing{display:flex;align-items:center;justify-content:center;text-align:center;font-size:12px;
+  border:2px dashed #b9895a;border-radius:10px;background:rgba(255,255,255,.55);padding:2px}
+.item{touch-action:none;cursor:grab}
+.item.dragging{cursor:grabbing;filter:drop-shadow(0 8px 8px rgba(80,40,10,.35));}
+.item.placed{cursor:default;touch-action:auto;pointer-events:none}
+.item.inbox .art{clip-path:inset(0 0 30% 0)}
+.item.flip .art img{transform:scaleX(-1)}
+.item.flatkeys .art{transform:scaleY(.72) rotate(45deg) scale(1.1)}
+.hint{position:absolute;border:3px dashed var(--orange);background:rgba(255,170,60,.22);border-radius:14px;
+  pointer-events:none;z-index:50;animation:pulse 1s infinite alternate}
+@keyframes pulse{from{opacity:.35}to{opacity:1}}
+.hidden{display:none}
+.star{position:absolute;z-index:60;font-size:34px;pointer-events:none;transform:translate(-50%,-50%);animation:pop .9s forwards}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}30%{opacity:1;transform:translate(-50%,-80%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-160%) scale(1)}}
+
+#tray{
+  width:var(--sw);margin:10px 0 14px;padding:10px;display:flex;flex-wrap:wrap;gap:14px;justify-content:center;align-items:flex-end;
+  background:linear-gradient(#d9ad78,#c89a64);border:3px solid #a8774a;border-radius:14px;min-height:calc(var(--th) + 24px)
+}
+.slot{height:var(--th);border-radius:10px;background:rgba(255,255,255,.18);border:2px dashed rgba(107,58,31,.3);position:relative}
+.slot .item{position:relative;width:100%;height:100%}
+
+#overlay{position:fixed;inset:0;background:rgba(90,50,20,.55);display:flex;align-items:center;justify-content:center;z-index:2000;padding:16px}
+#overlay.hidden{display:none}
+.card{background:#fff7ea;border:4px solid #b9895a;border-radius:22px;padding:22px 28px;max-width:520px;text-align:center}
+.card h2{margin:0 0 8px;font-size:30px}
+.card p{margin:6px 0;font-size:18px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0}
+.chips span{background:var(--orange);color:#fff;border-radius:999px;padding:4px 12px;font-weight:700}
+#ovStars{font-size:44px;color:#f0a020;letter-spacing:6px}
+.btns{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.btns button{font-size:18px;padding:10px 18px}
+
+</style>
+</head>
+<body>
+
+<div id="layout"><div id="main">
+<div id="top">
+  <h1>🏠 Prepositions Game</h1>
+  <div class="btnrow">
+    <button id="r0">Round 1</button>
+    <button id="r1">Round 2</button>
+    <button id="hintBtn">💡 Hint</button>
+    <button id="voiceBtn">🔊 Voice: on</button>
+  </div>
+</div>
+
+<div id="instr">
+  <button id="listen" title="Listen">🔊</button>
+  <span id="sentence"></span>
+  <div id="dots"></div>
+</div>
+<div id="msg"></div>
+
+<div id="scene">
+  <div id="hint" class="hint hidden"></div>
+</div>
+
+</div>
+<div id="tray"></div></div>
+
+<div id="overlay">
+  <div class="card">
+    <h2 id="ovT"></h2>
+    <p id="ovP"></p>
+    <div class="chips" id="ovChips"></div>
+    <div id="ovStars"></div>
+    <div class="btns" id="ovB"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- scene geometry: all numbers are % of the scene ---------- */
+const AR = 2576/1438;   // scene width / height
+
+/* Movable objects. w = width in % of scene width, ratio = real image width / height (images are cropped to content) */
+const ITEMS = {
+  bear:    {name:'teddy bear', file:'teddy.png',   w:9.5,  ratio:0.799},
+  box:     {name:'box',        file:'box.png',     w:17,   ratio:1.161},
+  cat:     {name:'cat',        file:'cat.png',     w:12.2, ratio:1.101},
+  mug:     {name:'mug',        file:'mug.png',     w:5.8,  ratio:0.655},
+  books:   {name:'books',      file:'books.png',   w:8.5,  ratio:1.66},
+  keys:    {name:'keys',       file:'keys.png',    w:5.5,  ratio:0.937},
+  lamp:    {name:'lamp',       file:'lamp.png',    w:9.1,  ratio:0.343},
+  picture: {name:'picture',    file:'picture.png', w:9.9,  ratio:0.777},
+  plant:   {name:'plant',      file:'plant.png',   w:12,   ratio:1.023},
+  ball:    {name:'ball',       file:'ball.png',    w:6.5,  ratio:0.949},
+  car:     {name:'toy car',    file:'car.png',     w:10,   ratio:1.461},
+  clock:   {name:'clock',      file:'clock.png',   w:7.5,  ratio:0.723}
+};
+
+/* Furniture that stays in the room (positions measured from your poster) */
+const FIXED = [
+  {file:'shelf.png',   label:'shelf',    cx:28.2, cy:22.4, w:16.5, ratio:2.778, z:2},
+  {file:'sofa.png',    label:'sofa',     cx:27,   cy:73.3, w:38,   ratio:1.531, z:3},
+  {file:'armchair.png',label:'armchair', cx:84.2, cy:77.6, w:27.4, ratio:0.947, z:3},
+  {file:'table.png',   label:'table',    cx:52.9, cy:86.8, w:27.9, ratio:1.494, z:5}
+];
+
+/* Drop zones: [x1,y1,x2,y2] in % of the scene. The CENTRE of the dropped object (where you let go) must be inside. */
+const TABLE_TOP = [[39,55,67,82]];
+const SHELF_TOP = [[19,2,38,22]];
+
+const ROUNDS = [
+ { override:{ plant:{file:'plant2.png', w:13, ratio:0.765} },
+   tasks:[
+  {item:'box',    pre:'Put the box ',        prep:'in front of', post:' the sofa.',
+     zone:[[17,82,42,100]],                      final:{cx:28,  cy:90,   z:6, s:0.95}},
+  {item:'ball',   pre:'Put the ball ',       prep:'in',          post:' the box.',
+     zone:[[20,76,36,100]],                      final:{cx:28,  cy:85,   z:7, front:true}},
+  {item:'bear',   pre:'Put the teddy bear ', prep:'next to',     post:' the box.',
+     zone:[[8,76,20,100],[36,84,42,100]],        final:{cx:15,  cy:89,   z:6}},
+  {item:'cat',    pre:'Put the cat ',        prep:'on',          post:' the window sill.',
+     zone:[[58,38,88,64]],                       final:{cx:68.4,cy:54.4, z:6}},
+  {item:'mug',    pre:'Put the mug ',        prep:'on',          post:' the table.',
+     zone:TABLE_TOP,                             final:{cx:49.2,cy:71.5, z:6}},
+  {item:'plant',  pre:'Put the plant ',      prep:'on',          post:' the shelf.',
+     zone:SHELF_TOP,                             final:{cx:30.5,cy:19.4, z:6}},
+  {item:'picture',pre:'Put the picture ',    prep:'next to',     post:' the shelf.',
+     zone:[[2,10,19,42],[37,8,50,35]],           final:{cx:10.8,cy:27.9, z:6}},
+  {item:'lamp',   pre:'Put the lamp ',       prep:'behind',      post:' the sofa.',
+     zone:[[12,20,50,66]],                       final:{cx:42.9,cy:55,   z:2}},
+  {item:'keys',   pre:'Put the keys ',       prep:'under',       post:' the table.',
+     zone:[[41,84,66,100]],                      final:{cx:48,  cy:93.5, z:6, s:0.8}}
+ ]},
+ { override:{ books:{w:12}, picture:{w:8} },
+   tasks:[
+  {item:'cat',    pre:'Put the cat ',        prep:'on',          post:' the sofa.',
+     zone:[[10,54,44,89]],                       final:{cx:27,  cy:66,   z:6}},
+  {item:'bear',   pre:'Put the teddy bear ', prep:'in',          post:' the armchair.',
+     zone:[[72,62,96,96]],                       final:{cx:77.5,cy:70.5, z:6, flip:true}},
+  {item:'car',    pre:'Put the toy car ',    prep:'in front of', post:' the armchair.',
+     zone:[[66,86,100,100]],                     final:{cx:66.5,cy:94.8, z:6}},
+  {item:'ball',   pre:'Put the ball ',       prep:'behind',      post:' the armchair.',
+     zone:[[72,38,100,70]],                      final:{cx:83,  cy:57,   z:2}},
+  {item:'books',  pre:'Put the books ',      prep:'next to',     post:' the sofa.',
+     zone:[[0,72,17,100]],                       final:{cx:9.5, cy:91.5, z:6}},
+  {item:'clock',  pre:'Put the clock ',      prep:'on',          post:' the wall.',
+     zone:[[1,3,56,48]],                         final:{cx:10.8,cy:27.5, z:6}},
+  {item:'keys',   pre:'Put the keys ',       prep:'on',          post:' the shelf.',
+     zone:SHELF_TOP,                             final:{cx:30,  cy:16.2, z:6, cls:'flatkeys'}},
+  {item:'box',    pre:'Put the box ',        prep:'under',       post:' the table.',
+     zone:[[41,84,66,100]],                      final:{cx:47.5,cy:93.5, z:6, s:0.42}},
+  {item:'mug',    pre:'Put the mug ',        prep:'on',          post:' the window sill.',
+     zone:[[58,38,88,64]],                       final:{cx:70,  cy:53.5, z:6}},
+  {item:'plant',  pre:'Put the plant ',      prep:'on',          post:' the table.',
+     zone:TABLE_TOP,                             final:{cx:53,  cy:69,   z:6}},
+  {item:'picture',pre:'Put the picture ',    prep:'under',       post:' the shelf.',
+     zone:[[19,28,38,52]],                       final:{cx:28.2,cy:38.7, z:6}},
+  {item:'lamp',   pre:'Put the lamp ',       prep:'behind',      post:' the armchair.',
+     zone:[[74,14,100,56]],                      final:{cx:90,  cy:47.5, z:2}}
+ ]}
+];
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const scene = $('#scene'), tray = $('#tray'), hintEl = $('#hint');
+const msgEl = $('#msg'), instrEl = $('#instr'), sentEl = $('#sentence'), dotsEl = $('#dots');
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+function placeEl(el,cx,cy,w,ratio){
+  const h = w*AR/ratio;
+  el.style.left = (cx-w/2)+'%';
+  el.style.top  = (cy-h/2)+'%';
+  el.style.width = w+'%';
+  el.style.height = h+'%';
+}
+function makeArt(file,label){
+  const wrap = document.createElement('div'); wrap.className='art';
+  const img = new Image(); img.draggable=false; img.alt=label;
+  img.onerror = () => { img.remove(); wrap.classList.add('missing'); wrap.textContent=label; };
+  img.src = 'images/'+file;
+  wrap.appendChild(img);
+  return wrap;
+}
+
+/* ---------- sound ---------- */
+let actx=null, voiceOn=true;
+function tone(freqs,dur,type){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    let t = actx.currentTime;
+    freqs.forEach(f=>{
+      const o=actx.createOscillator(), g=actx.createGain();
+      o.type=type||'sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(.18,t); g.gain.exponentialRampToValueAtTime(.001,t+dur);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+dur);
+      t += dur*.7;
+    });
+  }catch(e){}
+}
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang='en-GB'; u.rate=.85;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
+
+/* ---------- state ---------- */
+let round=0, order=[], ti=0, mistakes=0, streak=0, locked=true;
+const slots={};
+const def = id => Object.assign({}, ITEMS[id], (ROUNDS[round].override||{})[id]);
+
+function buildFixed(){
+  FIXED.forEach(f=>{
+    const el=document.createElement('div'); el.className='fixed';
+    el.style.zIndex=f.z; placeEl(el,f.cx,f.cy,f.w,f.ratio);
+    el.appendChild(makeArt(f.file,f.label));
+    scene.appendChild(el);
+  });
+}
+
+function startRound(i){
+  speechSynthesis && speechSynthesis.cancel && speechSynthesis.cancel();
+  document.querySelectorAll('.item,.boxfront').forEach(e=>e.remove());
+  tray.innerHTML=''; hintEl.classList.add('hidden');
+  round=i; order=ROUNDS[i].tasks.slice(); ti=0; mistakes=0; streak=0;
+  $('#r0').classList.toggle('on',i===0); $('#r1').classList.toggle('on',i===1);
+
+  shuffle([...new Set(ROUNDS[i].tasks.map(t=>t.item))]).forEach(id=>{
+    const d=def(id);
+    const slot=document.createElement('div'); slot.className='slot';
+    slot.style.width='calc(var(--th) * '+d.ratio+')';
+    const item=document.createElement('div'); item.className='item'; item.dataset.id=id;
+    item.appendChild(makeArt(d.file,d.name));
+    item.addEventListener('pointerdown',onDown);
+    slot.appendChild(item); tray.appendChild(slot); slots[id]=slot;
+  });
+  dotsEl.innerHTML=''; order.forEach(()=>dotsEl.appendChild(document.createElement('span')));
+  hideOverlay(); showTask();
+}
+
+function showTask(){
+  locked=false; streak=0; hintEl.classList.add('hidden');
+  const t=order[ti];
+  sentEl.innerHTML='';
+  sentEl.append(t.pre);
+  const b=document.createElement('span'); b.className='prep'; b.textContent=t.prep; sentEl.append(b);
+  sentEl.append(t.post);
+  [...dotsEl.children].forEach((d,i)=>{d.className = i<ti?'done':(i===ti?'cur':'');});
+  setMsg('');
+  if(voiceOn) speak(sentenceText());
+}
+function sentenceText(){const t=order[ti];return t.pre+t.prep+t.post;}
+function setMsg(text,cls){msgEl.textContent=text;msgEl.className=cls||'';}
+
+function showHint(){
+  if(locked||!order[ti]) return;
+  const z=order[ti].zone[0];
+  hintEl.style.left=z[0]+'%'; hintEl.style.top=z[1]+'%';
+  hintEl.style.width=(z[2]-z[0])+'%'; hintEl.style.height=(z[3]-z[1])+'%';
+  hintEl.classList.remove('hidden');
+}
+
+/* ---------- dragging ---------- */
+let drag=null;
+function onDown(e){
+  const el=e.currentTarget;
+  if(locked||drag||el.classList.contains('placed')) return;
+  e.preventDefault();
+  const d=def(el.dataset.id), r=scene.getBoundingClientRect();
+  const pw=d.w/100*r.width, ph=pw/d.ratio;
+  el.classList.add('dragging');
+  el.style.position='fixed'; el.style.zIndex=1000;
+  el.style.width=pw+'px'; el.style.height=ph+'px';
+  el.style.left=(e.clientX-pw/2)+'px'; el.style.top=(e.clientY-ph/2)+'px';
+  document.body.appendChild(el);
+  drag={el,pw,ph,pid:e.pointerId};
+}
+window.addEventListener('pointermove',e=>{
+  if(!drag||e.pointerId!==drag.pid) return;
+  drag.el.style.left=(e.clientX-drag.pw/2)+'px';
+  drag.el.style.top =(e.clientY-drag.ph/2)+'px';
+});
+function endDrag(e){
+  if(!drag||e.pointerId!==drag.pid) return;
+  const el=drag.el; drag=null;
+  const r=scene.getBoundingClientRect();
+  const cx=(e.clientX-r.left)/r.width*100, cy=(e.clientY-r.top)/r.height*100;
+  const inside = cx>=0&&cx<=100&&cy>=0&&cy<=100;
+  if(!inside){ backToTray(el); return; }
+  evaluate(el,cx,cy);
+}
+window.addEventListener('pointerup',endDrag);
+window.addEventListener('pointercancel',e=>{ if(drag&&e.pointerId===drag.pid){const el=drag.el;drag=null;backToTray(el);} });
+
+function backToTray(el){
+  el.classList.remove('dragging'); el.style.cssText='';
+  slots[el.dataset.id].appendChild(el);
+}
+function inZone(zones,x,y){ return zones.some(z=>x>=z[0]&&x<=z[2]&&y>=z[1]&&y<=z[3]); }
+
+function evaluate(el,cx,cy){
+  const t=order[ti], id=el.dataset.id;
+  if(id!==t.item){
+    wrong(el,'Not that one. Listen to the sentence again!');
+  }else if(!inZone(t.zone,cx,cy)){
+    wrong(el,'Not quite. Read the sentence again!');
+  }else{
+    success(el,t,cx,cy);
+  }
+}
+function wrong(el,text){
+  mistakes++; streak++;
+  tone([220,160],.18,'square');
+  setMsg(text,'bad');
+  instrEl.classList.remove('shake'); void instrEl.offsetWidth; instrEl.classList.add('shake');
+  backToTray(el);
+  if(streak>=2) showHint();
+}
+function success(el,t,cx,cy){
+  locked=true;
+  const d=def(el.dataset.id), f=t.final;
+  el.classList.remove('dragging'); el.style.cssText='';
+  el.classList.add('placed');
+  el.style.zIndex=f.z||6; el.style.transition='none';
+  placeEl(el,cx,cy,d.w,d.ratio);
+  scene.appendChild(el);
+  const fw=d.w*(f.s||1);
+  void el.offsetWidth;
+  el.style.transition='all .35s ease';
+  placeEl(el,f.cx,f.cy,fw,d.ratio);
+  if(f.cls) el.classList.add(f.cls);
+  if(f.flip) el.classList.add('flip');
+  if(f.front){            /* redraw the front of the box above the item, so it sits inside */
+    const bx=scene.querySelector('.item[data-id="box"]');
+    if(bx){
+      const ov=document.createElement('div'); ov.className='boxfront';
+      ov.style.cssText='position:absolute;pointer-events:none;z-index:8;left:'+bx.style.left+';top:'+bx.style.top+';width:'+bx.style.width+';height:'+bx.style.height+';clip-path:polygon(8.6% 31.5%,50% 47.3%,90% 31.5%,100% 33.2%,100% 100%,0 100%,0 33.2%)';
+      ov.appendChild(makeArt('box.png','box'));
+      scene.appendChild(ov);
+    }
+  }
+
+  const s=document.createElement('div'); s.className='star'; s.textContent='⭐';
+  s.style.left=f.cx+'%'; s.style.top=f.cy+'%'; scene.appendChild(s);
+  setTimeout(()=>s.remove(),1000);
+
+  hintEl.classList.add('hidden');
+  tone([523,659,784],.16,'triangle');
+  setMsg(shuffle(['Brilliant!','Well done!','Great job!','Perfect!','Lovely!'])[0],'good');
+  slots[el.dataset.id].style.opacity='.35';
+  [...dotsEl.children][ti].className='done';
+  ti++;
+  if(ti>=order.length) setTimeout(finish,900);
+  else setTimeout(showTask,900);
+}
+
+/* ---------- overlay ---------- */
+const ov=$('#overlay');
+function hideOverlay(){ov.classList.add('hidden');}
+function overlay(title,text,stars,buttons,chips){
+  $('#ovT').textContent=title; $('#ovP').textContent=text;
+  $('#ovStars').textContent=stars||'';
+  const c=$('#ovChips'); c.innerHTML='';
+  (chips||[]).forEach(x=>{const s=document.createElement('span');s.textContent=x;c.appendChild(s);});
+  const b=$('#ovB'); b.innerHTML='';
+  buttons.forEach(([label,fn])=>{const k=document.createElement('button');k.textContent=label;k.onclick=fn;b.appendChild(k);});
+  ov.classList.remove('hidden');
+}
+function finish(){
+  const n = mistakes<=2?3:(mistakes<=5?2:1);
+  const stars='★'.repeat(n)+'☆'.repeat(3-n);
+  const text = mistakes===0 ? 'No mistakes. Fantastic!' : 'Mistakes: '+mistakes;
+  const btns=[];
+  if(round===0) btns.push(['Round 2 →',()=>startRound(1)]);
+  btns.push(['Play again',()=>startRound(round)]);
+  if(round===1) btns.push(['Round 1',()=>startRound(0)]);
+  tone([523,659,784,1047],.18,'triangle');
+  overlay('Round '+(round+1)+' complete!',text,stars,btns);
+}
+function showStart(){
+  overlay('Prepositions Game','Read the sentence. Drag the right object from the tray into the room.','',
+    [['▶ Play Round 1',()=>{startRound(0);}]],
+    ['in','on','under','behind','next to','in front of']);
+}
+
+/* ---------- buttons ---------- */
+$('#r0').onclick=()=>startRound(0);
+$('#r1').onclick=()=>startRound(1);
+$('#hintBtn').onclick=showHint;
+$('#listen').onclick=()=>{ if(order[ti]) speak(sentenceText()); };
+$('#voiceBtn').onclick=e=>{
+  voiceOn=!voiceOn; e.target.textContent='🔊 Voice: '+(voiceOn?'on':'off');
+  if(!voiceOn) speechSynthesis.cancel();
+};
+
+buildFixed();
+showStart();
+})();
+</script>
+</body>
+</html>
